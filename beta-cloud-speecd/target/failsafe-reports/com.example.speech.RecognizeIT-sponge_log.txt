@@ -1,0 +1,40 @@
+-------------------------------------------------------------------------------
+Test set: com.example.speech.RecognizeIT
+-------------------------------------------------------------------------------
+Tests run: 9, Failures: 0, Errors: 9, Skipped: 0, Time elapsed: 0.777 s <<< FAILURE! - in com.example.speech.RecognizeIT
+testTranscribeWordLevelConfidenceGcs(com.example.speech.RecognizeIT)  Time elapsed: 0.318 s  <<< ERROR!
+java.io.IOException: The Application Default Credentials are not available. They are available if running in Google Compute Engine. Otherwise, the environment variable GOOGLE_APPLICATION_CREDENTIALS must be defined pointing to a file defining the credentials. See https://developers.google.com/accounts/docs/application-default-credentials for more information.
+	at com.example.speech.RecognizeIT.testTranscribeWordLevelConfidenceGcs(RecognizeIT.java:122)
+
+testTranscribeDiarizationGcs(com.example.speech.RecognizeIT)  Time elapsed: 0 s  <<< ERROR!
+java.io.IOException: The Application Default Credentials are not available. They are available if running in Google Compute Engine. Otherwise, the environment variable GOOGLE_APPLICATION_CREDENTIALS must be defined pointing to a file defining the credentials. See https://developers.google.com/accounts/docs/application-default-credentials for more information.
+	at com.example.speech.RecognizeIT.testTranscribeDiarizationGcs(RecognizeIT.java:79)
+
+testTranscribeMultiChannelGcs(com.example.speech.RecognizeIT)  Time elapsed: 0.001 s  <<< ERROR!
+java.io.IOException: The Application Default Credentials are not available. They are available if running in Google Compute Engine. Otherwise, the environment variable GOOGLE_APPLICATION_CREDENTIALS must be defined pointing to a file defining the credentials. See https://developers.google.com/accounts/docs/application-default-credentials for more information.
+	at com.example.speech.RecognizeIT.testTranscribeMultiChannelGcs(RecognizeIT.java:93)
+
+testTranscribeMultiChannel(com.example.speech.RecognizeIT)  Time elapsed: 0.171 s  <<< ERROR!
+java.io.IOException: The Application Default Credentials are not available. They are available if running in Google Compute Engine. Otherwise, the environment variable GOOGLE_APPLICATION_CREDENTIALS must be defined pointing to a file defining the credentials. See https://developers.google.com/accounts/docs/application-default-credentials for more information.
+	at com.example.speech.RecognizeIT.testTranscribeMultiChannel(RecognizeIT.java:86)
+
+testTranscribeMultiLanguageGcs(com.example.speech.RecognizeIT)  Time elapsed: 0.001 s  <<< ERROR!
+java.io.IOException: The Application Default Credentials are not available. They are available if running in Google Compute Engine. Otherwise, the environment variable GOOGLE_APPLICATION_CREDENTIALS must be defined pointing to a file defining the credentials. See https://developers.google.com/accounts/docs/application-default-credentials for more information.
+	at com.example.speech.RecognizeIT.testTranscribeMultiLanguageGcs(RecognizeIT.java:107)
+
+testMetadata(com.example.speech.RecognizeIT)  Time elapsed: 0.052 s  <<< ERROR!
+java.io.IOException: The Application Default Credentials are not available. They are available if running in Google Compute Engine. Otherwise, the environment variable GOOGLE_APPLICATION_CREDENTIALS must be defined pointing to a file defining the credentials. See https://developers.google.com/accounts/docs/application-default-credentials for more information.
+	at com.example.speech.RecognizeIT.testMetadata(RecognizeIT.java:65)
+
+testTranscribeMultiLanguage(com.example.speech.RecognizeIT)  Time elapsed: 0.129 s  <<< ERROR!
+java.io.IOException: The Application Default Credentials are not available. They are available if running in Google Compute Engine. Otherwise, the environment variable GOOGLE_APPLICATION_CREDENTIALS must be defined pointing to a file defining the credentials. See https://developers.google.com/accounts/docs/application-default-credentials for more information.
+	at com.example.speech.RecognizeIT.testTranscribeMultiLanguage(RecognizeIT.java:100)
+
+testTranscribeWordLevelConfidence(com.example.speech.RecognizeIT)  Time elapsed: 0.027 s  <<< ERROR!
+java.io.IOException: The Application Default Credentials are not available. They are available if running in Google Compute Engine. Otherwise, the environment variable GOOGLE_APPLICATION_CREDENTIALS must be defined pointing to a file defining the credentials. See https://developers.google.com/accounts/docs/application-default-credentials for more information.
+	at com.example.speech.RecognizeIT.testTranscribeWordLevelConfidence(RecognizeIT.java:114)
+
+testTranscribeDiarization(com.example.speech.RecognizeIT)  Time elapsed: 0.001 s  <<< ERROR!
+java.io.IOException: The Application Default Credentials are not available. They are available if running in Google Compute Engine. Otherwise, the environment variable GOOGLE_APPLICATION_CREDENTIALS must be defined pointing to a file defining the credentials. See https://developers.google.com/accounts/docs/application-default-credentials for more information.
+	at com.example.speech.RecognizeIT.testTranscribeDiarization(RecognizeIT.java:72)
+

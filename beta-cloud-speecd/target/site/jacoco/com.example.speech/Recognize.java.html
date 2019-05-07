@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Recognize.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">speech-google-cloud-samples</a> &gt; <a href="index.source.html" class="el_package">com.example.speech</a> &gt; <span class="el_source">Recognize.java</span></div><h1>Recognize.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2018 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.example.speech;
+
+import com.google.api.gax.longrunning.OperationFuture;
+import com.google.cloud.speech.v1p1beta1.LongRunningRecognizeMetadata;
+import com.google.cloud.speech.v1p1beta1.LongRunningRecognizeResponse;
+import com.google.cloud.speech.v1p1beta1.RecognitionAudio;
+import com.google.cloud.speech.v1p1beta1.RecognitionConfig;
+import com.google.cloud.speech.v1p1beta1.RecognitionConfig.AudioEncoding;
+import com.google.cloud.speech.v1p1beta1.RecognitionMetadata;
+import com.google.cloud.speech.v1p1beta1.RecognitionMetadata.InteractionType;
+import com.google.cloud.speech.v1p1beta1.RecognitionMetadata.MicrophoneDistance;
+import com.google.cloud.speech.v1p1beta1.RecognitionMetadata.RecordingDeviceType;
+import com.google.cloud.speech.v1p1beta1.RecognizeResponse;
+import com.google.cloud.speech.v1p1beta1.SpeechClient;
+import com.google.cloud.speech.v1p1beta1.SpeechRecognitionAlternative;
+import com.google.cloud.speech.v1p1beta1.SpeechRecognitionResult;
+import com.google.protobuf.ByteString;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+
+<span class="nc" id="L40">public class Recognize {</span>
+
+  /** Run speech recognition tasks. */
+  public static void main(String... args) throws Exception {
+<span class="nc bnc" id="L44" title="All 2 branches missed.">    if (args.length &lt; 1) {</span>
+<span class="nc" id="L45">      System.out.println(&quot;Usage:&quot;);</span>
+<span class="nc" id="L46">      System.out.printf(</span>
+          &quot;\tjava %s \&quot;&lt;command&gt;\&quot; \&quot;&lt;path-to-image&gt;\&quot;\n&quot;
+              + &quot;Commands:\n&quot;
+              + &quot;\t metadata | diarization | multi-channel |\n&quot;
+              + &quot;\t multi-language | word-level-conf\n&quot;
+              + &quot;Path:\n\tA file path (ex: ./resources/audio.raw) or a URI &quot;
+              + &quot;for a Cloud Storage resource (gs://...)\n&quot;,
+<span class="nc" id="L53">          Recognize.class.getCanonicalName());</span>
+<span class="nc" id="L54">      return;</span>
+    }
+<span class="nc" id="L56">    String command = args[0];</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">    String path = args.length &gt; 1 ? args[1] : &quot;&quot;;</span>
+
+    // Use command and GCS path pattern to invoke transcription.
+<span class="nc bnc" id="L60" title="All 2 branches missed.">    if (command.equals(&quot;metadata&quot;)) {</span>
+<span class="nc" id="L61">      transcribeFileWithMetadata(path);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">    } else if (command.equals(&quot;diarization&quot;)) {</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">      if (path.startsWith(&quot;gs://&quot;)) {</span>
+<span class="nc" id="L64">        transcribeDiarizationGcs(path);</span>
+      } else {
+<span class="nc" id="L66">        transcribeDiarization(path);</span>
+      }
+<span class="nc bnc" id="L68" title="All 2 branches missed.">    } else if (command.equals(&quot;multi-channel&quot;)) {</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">      if (path.startsWith(&quot;gs://&quot;)) {</span>
+<span class="nc" id="L70">        transcribeMultiChannelGcs(path);</span>
+      } else {
+<span class="nc" id="L72">        transcribeMultiChannel(path);</span>
+      }
+<span class="nc bnc" id="L74" title="All 2 branches missed.">    } else if (command.equals(&quot;multi-language&quot;)) {</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">      if (path.startsWith(&quot;gs://&quot;)) {</span>
+<span class="nc" id="L76">        transcribeMultiLanguageGcs(path);</span>
+      } else {
+<span class="nc" id="L78">        transcribeMultiLanguage(path);</span>
+      }
+<span class="nc bnc" id="L80" title="All 2 branches missed.">    } else if (command.equals(&quot;word-level-conf&quot;)) {</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">      if (path.startsWith(&quot;gs://&quot;)) {</span>
+<span class="nc" id="L82">        transcribeWordLevelConfidenceGcs(path);</span>
+      } else {
+<span class="nc" id="L84">        transcribeWordLevelConfidence(path);</span>
+      }
+    }
+<span class="nc" id="L87">  }</span>
+
+  // [START speech_transcribe_recognition_metadata_beta]
+  /**
+   * Transcribe the given audio file and include recognition metadata in the request.
+   *
+   * @param fileName the path to an audio file.
+   */
+  public static void transcribeFileWithMetadata(String fileName) throws Exception {
+<span class="nc" id="L96">    Path path = Paths.get(fileName);</span>
+<span class="nc" id="L97">    byte[] content = Files.readAllBytes(path);</span>
+
+<span class="nc" id="L99">    try (SpeechClient speechClient = SpeechClient.create()) {</span>
+      // Get the contents of the local audio file
+      RecognitionAudio recognitionAudio =
+<span class="nc" id="L102">          RecognitionAudio.newBuilder().setContent(ByteString.copyFrom(content)).build();</span>
+
+      // Construct a recognition metadata object.
+      // Most metadata fields are specified as enums that can be found
+      // in speech.enums.RecognitionMetadata
+      RecognitionMetadata metadata =
+<span class="nc" id="L108">          RecognitionMetadata.newBuilder()</span>
+<span class="nc" id="L109">              .setInteractionType(InteractionType.DISCUSSION)</span>
+<span class="nc" id="L110">              .setMicrophoneDistance(MicrophoneDistance.NEARFIELD)</span>
+<span class="nc" id="L111">              .setRecordingDeviceType(RecordingDeviceType.SMARTPHONE)</span>
+<span class="nc" id="L112">              .setRecordingDeviceName(&quot;Pixel 2 XL&quot;) // Some metadata fields are free form strings</span>
+              // And some are integers, for instance the 6 digit NAICS code
+              // https://www.naics.com/search/
+<span class="nc" id="L115">              .setIndustryNaicsCodeOfAudio(519190)</span>
+<span class="nc" id="L116">              .build();</span>
+
+      // Configure request to enable enhanced models
+      RecognitionConfig config =
+<span class="nc" id="L120">          RecognitionConfig.newBuilder()</span>
+<span class="nc" id="L121">              .setEncoding(AudioEncoding.LINEAR16)</span>
+<span class="nc" id="L122">              .setLanguageCode(&quot;en-US&quot;)</span>
+<span class="nc" id="L123">              .setSampleRateHertz(8000)</span>
+<span class="nc" id="L124">              .setMetadata(metadata) // Add the metadata to the config</span>
+<span class="nc" id="L125">              .build();</span>
+
+      // Perform the transcription request
+<span class="nc" id="L128">      RecognizeResponse recognizeResponse = speechClient.recognize(config, recognitionAudio);</span>
+
+      // Print out the results
+<span class="nc bnc" id="L131" title="All 2 branches missed.">      for (SpeechRecognitionResult result : recognizeResponse.getResultsList()) {</span>
+        // There can be several alternative transcripts for a given chunk of speech. Just use the
+        // first (most likely) one here.
+<span class="nc" id="L134">        SpeechRecognitionAlternative alternative = result.getAlternatives(0);</span>
+<span class="nc" id="L135">        System.out.format(&quot;Transcript: %s\n\n&quot;, alternative.getTranscript());</span>
+<span class="nc" id="L136">      }</span>
+    }
+<span class="nc" id="L138">  }</span>
+  // [END speech_transcribe_recognition_metadata_beta]
+
+  // [START speech_transcribe_diarization_beta]
+  /**
+   * Transcribe the given audio file using speaker diarization.
+   *
+   * @param fileName the path to an audio file.
+   */
+  public static void transcribeDiarization(String fileName) throws Exception {
+<span class="nc" id="L148">    Path path = Paths.get(fileName);</span>
+<span class="nc" id="L149">    byte[] content = Files.readAllBytes(path);</span>
+
+<span class="nc" id="L151">    try (SpeechClient speechClient = SpeechClient.create()) {</span>
+      // Get the contents of the local audio file
+      RecognitionAudio recognitionAudio =
+<span class="nc" id="L154">          RecognitionAudio.newBuilder().setContent(ByteString.copyFrom(content)).build();</span>
+
+      // Configure request to enable Speaker diarization
+      RecognitionConfig config =
+<span class="nc" id="L158">          RecognitionConfig.newBuilder()</span>
+<span class="nc" id="L159">              .setEncoding(AudioEncoding.LINEAR16)</span>
+<span class="nc" id="L160">              .setLanguageCode(&quot;en-US&quot;)</span>
+<span class="nc" id="L161">              .setSampleRateHertz(8000)</span>
+<span class="nc" id="L162">              .setEnableSpeakerDiarization(true)</span>
+<span class="nc" id="L163">              .setDiarizationSpeakerCount(2)</span>
+<span class="nc" id="L164">              .build();</span>
+
+      // Perform the transcription request
+<span class="nc" id="L167">      RecognizeResponse recognizeResponse = speechClient.recognize(config, recognitionAudio);</span>
+
+      // Print out the results
+<span class="nc bnc" id="L170" title="All 2 branches missed.">      for (SpeechRecognitionResult result : recognizeResponse.getResultsList()) {</span>
+        // There can be several alternative transcripts for a given chunk of speech. Just
+        // use the first (most likely) one here.
+<span class="nc" id="L173">        SpeechRecognitionAlternative alternative = result.getAlternatives(0);</span>
+<span class="nc" id="L174">        System.out.format(&quot;Transcript : %s\n&quot;, alternative.getTranscript());</span>
+        // The words array contains the entire transcript up until that point.
+        // Referencing the last spoken word to get the associated Speaker tag
+<span class="nc" id="L177">        System.out.format(</span>
+            &quot;Speaker Tag %s: %s\n&quot;,
+<span class="nc" id="L179">            alternative.getWords((alternative.getWordsCount() - 1)).getSpeakerTag(),</span>
+<span class="nc" id="L180">            alternative.getTranscript());</span>
+<span class="nc" id="L181">      }</span>
+    }
+<span class="nc" id="L183">  }</span>
+  // [END speech_transcribe_diarization_beta]
+
+  // [START speech_transcribe_diarization_gcs_beta]
+  /**
+   * Transcribe a remote audio file using speaker diarization.
+   *
+   * @param gcsUri the path to an audio file.
+   */
+  public static void transcribeDiarizationGcs(String gcsUri) throws Exception {
+<span class="nc" id="L193">    try (SpeechClient speechClient = SpeechClient.create()) {</span>
+      // Configure request to enable Speaker diarization
+      RecognitionConfig config =
+<span class="nc" id="L196">          RecognitionConfig.newBuilder()</span>
+<span class="nc" id="L197">              .setEncoding(AudioEncoding.LINEAR16)</span>
+<span class="nc" id="L198">              .setLanguageCode(&quot;en-US&quot;)</span>
+<span class="nc" id="L199">              .setSampleRateHertz(8000)</span>
+<span class="nc" id="L200">              .setEnableSpeakerDiarization(true)</span>
+<span class="nc" id="L201">              .setDiarizationSpeakerCount(2)</span>
+<span class="nc" id="L202">              .build();</span>
+
+      // Set the remote path for the audio file
+<span class="nc" id="L205">      RecognitionAudio audio = RecognitionAudio.newBuilder().setUri(gcsUri).build();</span>
+
+      // Use non-blocking call for getting file transcription
+<span class="nc" id="L208">      OperationFuture&lt;LongRunningRecognizeResponse, LongRunningRecognizeMetadata&gt; response =</span>
+<span class="nc" id="L209">          speechClient.longRunningRecognizeAsync(config, audio);</span>
+
+<span class="nc bnc" id="L211" title="All 2 branches missed.">      while (!response.isDone()) {</span>
+<span class="nc" id="L212">        System.out.println(&quot;Waiting for response...&quot;);</span>
+<span class="nc" id="L213">        Thread.sleep(10000);</span>
+      }
+
+<span class="nc bnc" id="L216" title="All 2 branches missed.">      for (SpeechRecognitionResult result : response.get().getResultsList()) {</span>
+        // There can be several alternative transcripts for a given chunk of speech. Just
+        // use the first (most likely) one here.
+<span class="nc" id="L219">        SpeechRecognitionAlternative alternative = result.getAlternatives(0);</span>
+        // The words array contains the entire transcript up until that point.
+        // Referencing the last spoken word to get the associated Speaker tag
+<span class="nc" id="L222">        System.out.format(</span>
+            &quot;Speaker Tag %s:%s\n&quot;,
+<span class="nc" id="L224">            alternative.getWords((alternative.getWordsCount() - 1)).getSpeakerTag(),</span>
+<span class="nc" id="L225">            alternative.getTranscript());</span>
+<span class="nc" id="L226">      }</span>
+    }
+<span class="nc" id="L228">  }</span>
+  // [END speech_transcribe_diarization_gcs_beta]
+
+  // [START speech_transcribe_multichannel_beta]
+  /**
+   * Transcribe a local audio file with multi-channel recognition
+   *
+   * @param fileName the path to local audio file
+   */
+  public static void transcribeMultiChannel(String fileName) throws Exception {
+<span class="nc" id="L238">    Path path = Paths.get(fileName);</span>
+<span class="nc" id="L239">    byte[] content = Files.readAllBytes(path);</span>
+
+<span class="nc" id="L241">    try (SpeechClient speechClient = SpeechClient.create()) {</span>
+      // Get the contents of the local audio file
+      RecognitionAudio recognitionAudio =
+<span class="nc" id="L244">          RecognitionAudio.newBuilder().setContent(ByteString.copyFrom(content)).build();</span>
+
+      // Configure request to enable multiple channels
+      RecognitionConfig config =
+<span class="nc" id="L248">          RecognitionConfig.newBuilder()</span>
+<span class="nc" id="L249">              .setEncoding(AudioEncoding.LINEAR16)</span>
+<span class="nc" id="L250">              .setLanguageCode(&quot;en-US&quot;)</span>
+<span class="nc" id="L251">              .setSampleRateHertz(44100)</span>
+<span class="nc" id="L252">              .setAudioChannelCount(2)</span>
+<span class="nc" id="L253">              .setEnableSeparateRecognitionPerChannel(true)</span>
+<span class="nc" id="L254">              .build();</span>
+
+      // Perform the transcription request
+<span class="nc" id="L257">      RecognizeResponse recognizeResponse = speechClient.recognize(config, recognitionAudio);</span>
+
+      // Print out the results
+<span class="nc bnc" id="L260" title="All 2 branches missed.">      for (SpeechRecognitionResult result : recognizeResponse.getResultsList()) {</span>
+        // There can be several alternative transcripts for a given chunk of speech. Just use the
+        // first (most likely) one here.
+<span class="nc" id="L263">        SpeechRecognitionAlternative alternative = result.getAlternatives(0);</span>
+<span class="nc" id="L264">        System.out.format(&quot;Transcript : %s\n&quot;, alternative.getTranscript());</span>
+<span class="nc" id="L265">        System.out.printf(&quot;Channel Tag : %s\n\n&quot;, result.getChannelTag());</span>
+<span class="nc" id="L266">      }</span>
+    }
+<span class="nc" id="L268">  }</span>
+  // [END speech_transcribe_multichannel_beta]
+
+  // [START speech_transcribe_multichannel_gcs_beta]
+  /**
+   * Transcribe a remote audio file with multi-channel recognition
+   *
+   * @param gcsUri the path to the audio file
+   */
+  public static void transcribeMultiChannelGcs(String gcsUri) throws Exception {
+
+<span class="nc" id="L279">    try (SpeechClient speechClient = SpeechClient.create()) {</span>
+
+      // Configure request to enable multiple channels
+      RecognitionConfig config =
+<span class="nc" id="L283">          RecognitionConfig.newBuilder()</span>
+<span class="nc" id="L284">              .setEncoding(AudioEncoding.LINEAR16)</span>
+<span class="nc" id="L285">              .setLanguageCode(&quot;en-US&quot;)</span>
+<span class="nc" id="L286">              .setSampleRateHertz(44100)</span>
+<span class="nc" id="L287">              .setAudioChannelCount(2)</span>
+<span class="nc" id="L288">              .setEnableSeparateRecognitionPerChannel(true)</span>
+<span class="nc" id="L289">              .build();</span>
+
+      // Set the remote path for the audio file
+<span class="nc" id="L292">      RecognitionAudio audio = RecognitionAudio.newBuilder().setUri(gcsUri).build();</span>
+
+      // Use non-blocking call for getting file transcription
+<span class="nc" id="L295">      OperationFuture&lt;LongRunningRecognizeResponse, LongRunningRecognizeMetadata&gt; response =</span>
+<span class="nc" id="L296">          speechClient.longRunningRecognizeAsync(config, audio);</span>
+
+<span class="nc bnc" id="L298" title="All 2 branches missed.">      while (!response.isDone()) {</span>
+<span class="nc" id="L299">        System.out.println(&quot;Waiting for response...&quot;);</span>
+<span class="nc" id="L300">        Thread.sleep(10000);</span>
+      }
+      // Just print the first result here.
+<span class="nc bnc" id="L303" title="All 2 branches missed.">      for (SpeechRecognitionResult result : response.get().getResultsList()) {</span>
+
+        // There can be several alternative transcripts for a given chunk of speech. Just use the
+        // first (most likely) one here.
+<span class="nc" id="L307">        SpeechRecognitionAlternative alternative = result.getAlternativesList().get(0);</span>
+
+        // Print out the result
+<span class="nc" id="L310">        System.out.printf(&quot;Transcript : %s\n&quot;, alternative.getTranscript());</span>
+<span class="nc" id="L311">        System.out.printf(&quot;Channel Tag : %s\n\n&quot;, result.getChannelTag());</span>
+<span class="nc" id="L312">      }</span>
+    }
+<span class="nc" id="L314">  }</span>
+  // [END speech_transcribe_multichannel_gcs_beta]
+
+  // [START speech_transcribe_multilanguage_beta]
+  /**
+   * Transcribe a local audio file with multi-language recognition
+   *
+   * @param fileName the path to the audio file
+   */
+  public static void transcribeMultiLanguage(String fileName) throws Exception {
+<span class="nc" id="L324">    Path path = Paths.get(fileName);</span>
+    // Get the contents of the local audio file
+<span class="nc" id="L326">    byte[] content = Files.readAllBytes(path);</span>
+
+<span class="nc" id="L328">    try (SpeechClient speechClient = SpeechClient.create()) {</span>
+
+      RecognitionAudio recognitionAudio =
+<span class="nc" id="L331">          RecognitionAudio.newBuilder().setContent(ByteString.copyFrom(content)).build();</span>
+<span class="nc" id="L332">      ArrayList&lt;String&gt; languageList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L333">      languageList.add(&quot;es-ES&quot;);</span>
+<span class="nc" id="L334">      languageList.add(&quot;en-US&quot;);</span>
+
+      // Configure request to enable multiple languages
+      RecognitionConfig config =
+<span class="nc" id="L338">          RecognitionConfig.newBuilder()</span>
+<span class="nc" id="L339">              .setEncoding(AudioEncoding.LINEAR16)</span>
+<span class="nc" id="L340">              .setSampleRateHertz(16000)</span>
+<span class="nc" id="L341">              .setLanguageCode(&quot;ja-JP&quot;)</span>
+<span class="nc" id="L342">              .addAllAlternativeLanguageCodes(languageList)</span>
+<span class="nc" id="L343">              .build();</span>
+      // Perform the transcription request
+<span class="nc" id="L345">      RecognizeResponse recognizeResponse = speechClient.recognize(config, recognitionAudio);</span>
+
+      // Print out the results
+<span class="nc bnc" id="L348" title="All 2 branches missed.">      for (SpeechRecognitionResult result : recognizeResponse.getResultsList()) {</span>
+        // There can be several alternative transcripts for a given chunk of speech. Just use the
+        // first (most likely) one here.
+<span class="nc" id="L351">        SpeechRecognitionAlternative alternative = result.getAlternatives(0);</span>
+<span class="nc" id="L352">        System.out.format(&quot;Transcript : %s\n\n&quot;, alternative.getTranscript());</span>
+<span class="nc" id="L353">      }</span>
+    }
+<span class="nc" id="L355">  }</span>
+  // [END speech_transcribe_multilanguage_beta]
+
+  // [START speech_transcribe_multilanguage_gcs_beta]
+  /**
+   * Transcribe a remote audio file with multi-language recognition
+   *
+   * @param gcsUri the path to the remote audio file
+   */
+  public static void transcribeMultiLanguageGcs(String gcsUri) throws Exception {
+<span class="nc" id="L365">    try (SpeechClient speechClient = SpeechClient.create()) {</span>
+
+<span class="nc" id="L367">      ArrayList&lt;String&gt; languageList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L368">      languageList.add(&quot;es-ES&quot;);</span>
+<span class="nc" id="L369">      languageList.add(&quot;en-US&quot;);</span>
+
+      // Configure request to enable multiple languages
+      RecognitionConfig config =
+<span class="nc" id="L373">          RecognitionConfig.newBuilder()</span>
+<span class="nc" id="L374">              .setEncoding(AudioEncoding.LINEAR16)</span>
+<span class="nc" id="L375">              .setSampleRateHertz(16000)</span>
+<span class="nc" id="L376">              .setLanguageCode(&quot;ja-JP&quot;)</span>
+<span class="nc" id="L377">              .addAllAlternativeLanguageCodes(languageList)</span>
+<span class="nc" id="L378">              .build();</span>
+
+      // Set the remote path for the audio file
+<span class="nc" id="L381">      RecognitionAudio audio = RecognitionAudio.newBuilder().setUri(gcsUri).build();</span>
+
+      // Use non-blocking call for getting file transcription
+<span class="nc" id="L384">      OperationFuture&lt;LongRunningRecognizeResponse, LongRunningRecognizeMetadata&gt; response =</span>
+<span class="nc" id="L385">          speechClient.longRunningRecognizeAsync(config, audio);</span>
+
+<span class="nc bnc" id="L387" title="All 2 branches missed.">      while (!response.isDone()) {</span>
+<span class="nc" id="L388">        System.out.println(&quot;Waiting for response...&quot;);</span>
+<span class="nc" id="L389">        Thread.sleep(10000);</span>
+      }
+
+<span class="nc bnc" id="L392" title="All 2 branches missed.">      for (SpeechRecognitionResult result : response.get().getResultsList()) {</span>
+
+        // There can be several alternative transcripts for a given chunk of speech. Just use the
+        // first (most likely) one here.
+<span class="nc" id="L396">        SpeechRecognitionAlternative alternative = result.getAlternativesList().get(0);</span>
+
+        // Print out the result
+<span class="nc" id="L399">        System.out.printf(&quot;Transcript : %s\n\n&quot;, alternative.getTranscript());</span>
+<span class="nc" id="L400">      }</span>
+    }
+<span class="nc" id="L402">  }</span>
+  // [END speech_transcribe_multilanguage_gcs_beta]
+
+  // [START speech_transcribe_word_level_confidence_beta]
+  /**
+   * Transcribe a local audio file with word level confidence
+   *
+   * @param fileName the path to the local audio file
+   */
+  public static void transcribeWordLevelConfidence(String fileName) throws Exception {
+<span class="nc" id="L412">    Path path = Paths.get(fileName);</span>
+<span class="nc" id="L413">    byte[] content = Files.readAllBytes(path);</span>
+
+<span class="nc" id="L415">    try (SpeechClient speechClient = SpeechClient.create()) {</span>
+      RecognitionAudio recognitionAudio =
+<span class="nc" id="L417">          RecognitionAudio.newBuilder().setContent(ByteString.copyFrom(content)).build();</span>
+      // Configure request to enable word level confidence
+      RecognitionConfig config =
+<span class="nc" id="L420">          RecognitionConfig.newBuilder()</span>
+<span class="nc" id="L421">              .setEncoding(AudioEncoding.LINEAR16)</span>
+<span class="nc" id="L422">              .setSampleRateHertz(16000)</span>
+<span class="nc" id="L423">              .setLanguageCode(&quot;en-US&quot;)</span>
+<span class="nc" id="L424">              .setEnableWordConfidence(true)</span>
+<span class="nc" id="L425">              .build();</span>
+      // Perform the transcription request
+<span class="nc" id="L427">      RecognizeResponse recognizeResponse = speechClient.recognize(config, recognitionAudio);</span>
+
+      // Print out the results
+<span class="nc bnc" id="L430" title="All 2 branches missed.">      for (SpeechRecognitionResult result : recognizeResponse.getResultsList()) {</span>
+        // There can be several alternative transcripts for a given chunk of speech. Just use the
+        // first (most likely) one here.
+<span class="nc" id="L433">        SpeechRecognitionAlternative alternative = result.getAlternatives(0);</span>
+<span class="nc" id="L434">        System.out.format(&quot;Transcript : %s\n&quot;, alternative.getTranscript());</span>
+<span class="nc" id="L435">        System.out.format(</span>
+            &quot;First Word and Confidence : %s %s \n&quot;,
+<span class="nc" id="L437">            alternative.getWords(0).getWord(), alternative.getWords(0).getConfidence());</span>
+<span class="nc" id="L438">      }</span>
+    }
+<span class="nc" id="L440">  }</span>
+  // [END speech_transcribe_word_level_confidence_beta]
+
+  // [START speech_transcribe_word_level_confidence_gcs_beta]
+  /**
+   * Transcribe a remote audio file with word level confidence
+   *
+   * @param gcsUri path to the remote audio file
+   */
+  public static void transcribeWordLevelConfidenceGcs(String gcsUri) throws Exception {
+<span class="nc" id="L450">    try (SpeechClient speechClient = SpeechClient.create()) {</span>
+
+      // Configure request to enable word level confidence
+      RecognitionConfig config =
+<span class="nc" id="L454">          RecognitionConfig.newBuilder()</span>
+<span class="nc" id="L455">              .setEncoding(AudioEncoding.FLAC)</span>
+<span class="nc" id="L456">              .setSampleRateHertz(16000)</span>
+<span class="nc" id="L457">              .setLanguageCode(&quot;en-US&quot;)</span>
+<span class="nc" id="L458">              .setEnableWordConfidence(true)</span>
+<span class="nc" id="L459">              .build();</span>
+
+      // Set the remote path for the audio file
+<span class="nc" id="L462">      RecognitionAudio audio = RecognitionAudio.newBuilder().setUri(gcsUri).build();</span>
+
+      // Use non-blocking call for getting file transcription
+<span class="nc" id="L465">      OperationFuture&lt;LongRunningRecognizeResponse, LongRunningRecognizeMetadata&gt; response =</span>
+<span class="nc" id="L466">          speechClient.longRunningRecognizeAsync(config, audio);</span>
+
+<span class="nc bnc" id="L468" title="All 2 branches missed.">      while (!response.isDone()) {</span>
+<span class="nc" id="L469">        System.out.println(&quot;Waiting for response...&quot;);</span>
+<span class="nc" id="L470">        Thread.sleep(10000);</span>
+      }
+      // Just print the first result here.
+<span class="nc" id="L473">      SpeechRecognitionResult result = response.get().getResultsList().get(0);</span>
+
+      // There can be several alternative transcripts for a given chunk of speech. Just use the
+      // first (most likely) one here.
+<span class="nc" id="L477">      SpeechRecognitionAlternative alternative = result.getAlternativesList().get(0);</span>
+      // Print out the result
+<span class="nc" id="L479">      System.out.printf(&quot;Transcript : %s\n&quot;, alternative.getTranscript());</span>
+<span class="nc" id="L480">      System.out.format(</span>
+          &quot;First Word and Confidence : %s %s \n&quot;,
+<span class="nc" id="L482">          alternative.getWords(0).getWord(), alternative.getWords(0).getConfidence());</span>
+    }
+<span class="nc" id="L484">  }</span>
+  // [END speech_transcribe_word_level_confidence_gcs_beta]
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
